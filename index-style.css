@@ -83,7 +83,7 @@
     }
 
     .navbar-right {
-        flex-direction: column; /* KEEP horizontal layout */
+        flex-direction: row; /* KEEP horizontal layout */
         justify-content: flex-end;
         width: auto;
     }
