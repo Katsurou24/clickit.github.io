@@ -84,7 +84,6 @@
 
     .navbar-right {
         flex-direction: row; /* KEEP horizontal layout */
-        flex-wrap: wrap;     /* Wrap if space is too tight */
         justify-content: flex-end;
         width: auto;
     }
