@@ -73,25 +73,32 @@
 
 @media (max-width: 768px) {
     .navbar {
-        padding: 10px 15px; /* Reduce padding, but keep flex-direction row */
+        flex-direction: row; /* Keep it horizontal */
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 15px;
+        flex-wrap: nowrap;
         height: auto;
-        flex-wrap: wrap; /* Allow wrapping if really tight */
     }
 
     .navbar-left {
-        margin-bottom: 0;
+        flex-direction: row;
+        align-items: center;
+        flex-shrink: 1;
     }
 
     .navbar-right {
-        flex-direction: row; /* KEEP horizontal layout */
+        display: flex;
+        flex-direction: row; /* Force horizontal */
+        flex-wrap: nowrap;
         justify-content: flex-end;
-        width: auto;
+        gap: 8px;
     }
 
     .nav-link {
-        padding: 8px 12px;
-        font-size: 16px;
-        white-space: nowrap; /* Prevent text wrapping */
+        font-size: 14px; /* Smaller font for mobile */
+        padding: 8px 10px;
+        white-space: nowrap; /* Prevent line breaks */
     }
 
     .center-text {
