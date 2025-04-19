@@ -1,61 +1,77 @@
-<button id="start-scan">Start Beacon Scan</button>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Indoor Map</title>
+  <link rel="stylesheet" href="maps-style.css" />
+</head>
+<body>
 
-<div id="status">Not connected</div>
+  <h1>Indoor Map Test</h1>
 
-<div id="map-container" style="display: none;">
-  <img id="floor-map" src="assets/floor_plan_enhanced.png" alt="Map">
-</div>
+  <button id="start-scan">Start Beacon Scan</button>
+  <div id="status">Not connected</div>
 
-<script>
-  const beacon1 = "FB:01:4B:54:27:3E".toLowerCase();
-  const beacon2 = "CF:15:06:D2:B2:21".toLowerCase();
-  const mapContainer = document.getElementById("map-container");
-  const status = document.getElementById("status");
+  <div id="map-container" style="display: none;">
+    <img id="floor-map" src="assets/floor_plan_enhanced.png" alt="Floor Map" />
+  </div>
 
-  let isScanning = false;
-  let scanRef = null;
+  <script>
+    const beacon1 = "fb:01:4b:54:27:3e"; // Beacon 1
+    const beacon2 = "cf:15:06:d2:b2:21"; // Beacon 2
+    const mapContainer = document.getElementById("map-container");
+    const status = document.getElementById("status");
 
-  document.getElementById("start-scan").addEventListener("click", async () => {
-    if (isScanning) return;
-    isScanning = true;
-    status.textContent = "Scanning for beacons...";
+    let currentNearest = null;
+    let rssiMap = {};
 
-    try {
-      // This uses `navigator.bluetooth.requestLEScan`, only available in some browsers
-      scanRef = await navigator.bluetooth.requestLEScan({
-        acceptAllAdvertisements: true
-      });
+    document.getElementById("start-scan").addEventListener("click", async () => {
+      if (!navigator.bluetooth || !navigator.bluetooth.requestLEScan) {
+        alert("Web Bluetooth API not supported on this device/browser.");
+        return;
+      }
 
-      navigator.bluetooth.addEventListener("advertisementreceived", event => {
-        const mac = event.device.id.toLowerCase();
-        const rssi = event.rssi;
+      status.textContent = "Requesting scan permission...";
+      
+      try {
+        await navigator.bluetooth.requestLEScan({ acceptAllAdvertisements: true });
 
-        if (mac === beacon1 || mac === beacon2) {
-          status.textContent = `Detected ${mac} (RSSI: ${rssi})`;
-        }
+        status.textContent = "Scanning... bring your beacons close.";
 
-        // Compare proximity
-        const devices = {
-          [beacon1]: -Infinity,
-          [beacon2]: -Infinity
-        };
+        navigator.bluetooth.addEventListener("advertisementreceived", event => {
+          const mac = event.device.id.toLowerCase();
+          const rssi = event.rssi;
 
-        if (mac === beacon1 || mac === beacon2) {
-          devices[mac] = rssi;
-        }
+          if (mac === beacon1 || mac === beacon2) {
+            rssiMap[mac] = rssi;
 
-        const closer = devices[beacon1] > devices[beacon2] ? beacon1 : beacon2;
+            let nearest = null;
+            if (rssiMap[beacon1] != null && rssiMap[beacon2] != null) {
+              nearest = rssiMap[beacon1] > rssiMap[beacon2] ? beacon1 : beacon2;
+            } else {
+              nearest = rssiMap[beacon1] != null ? beacon1 : beacon2;
+            }
 
-        if (closer === beacon1) {
-          mapContainer.style.display = "block";
-        } else {
-          mapContainer.style.display = "none";
-        }
-      });
+            if (nearest !== currentNearest) {
+              currentNearest = nearest;
+              status.textContent = `Nearest: ${nearest.toUpperCase()} (RSSI ${rssiMap[nearest]})`;
 
-    } catch (error) {
-      console.error("Bluetooth error:", error);
-      status.textContent = "Bluetooth error: " + error.message;
-    }
-  });
-</script>
+              if (nearest === beacon1) {
+                mapContainer.style.display = "block";
+              } else if (nearest === beacon2) {
+                mapContainer.style.display = "none";
+              }
+            }
+          }
+        });
+
+      } catch (error) {
+        console.error("Scan error:", error);
+        status.textContent = "Scan failed: " + error.message;
+      }
+    });
+  </script>
+
+</body>
+</html>
