@@ -9,7 +9,7 @@
             background-color: #3087d7;
             padding: 15px 25px;
             display: flex;
-            align-items: center;
+            align-items: left;
             justify-content: space-between;
             width: 100vw;
             position: fixed;
@@ -83,7 +83,7 @@
     }
 
     .navbar-right {
-        flex-direction: row; /* KEEP horizontal layout */
+        flex-direction: column; /* KEEP horizontal layout */
         justify-content: flex-end;
         width: auto;
     }
