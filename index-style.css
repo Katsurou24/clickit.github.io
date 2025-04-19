@@ -70,3 +70,28 @@
             color: #333;
             margin-top: 20px;
         }
+
+@media (max-width: 768px) {
+    .navbar {
+        flex-direction: column;
+        align-items: flex-start;
+        height: auto;
+        padding: 10px;
+    }
+
+    .navbar-right {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .nav-link {
+        padding: 10px 0;
+        width: 100%;
+        text-align: left;
+    }
+
+    .center-text {
+        font-size: 48px; /* Smaller size for mobile */
+        padding: 0 10px;
+    }
+}
