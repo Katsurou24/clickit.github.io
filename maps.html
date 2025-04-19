@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Indoor Map</title>
+  <link rel="stylesheet" href="maps-style.css">
+</head>
+<body>
+
+  <h1>Indoor Map Viewer</h1>
+
+  <div id="map-container">
+    <!-- Your actual floor plan image -->
+    <img id="floor-map" src="assets/floor_plan_enhanced.png" alt="Map">
+    
+    <!-- A simple red dot to represent user's position (for testing) -->
+    <div id="user-dot"></div>
+  </div>
+
+  <script>
+    // Simple animation that simulates the user moving
+    const userDot = document.getElementById("user-dot");
+    const positions = [
+      { top: "20%", left: "25%" },
+      { top: "40%", left: "50%" },
+      { top: "65%", left: "70%" }
+    ];
+    let index = 0;
+
+    setInterval(() => {
+      const pos = positions[index];
+      userDot.style.top = pos.top;
+      userDot.style.left = pos.left;
+      index = (index + 1) % positions.length;
+    }, 2000);
+  </script>
+
+</body>
+</html>
