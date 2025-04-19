@@ -27,7 +27,7 @@
         </div>
     </nav>
 
-    <div id="map"></div>
+    <div id="map" style="height: 80vh;"></div>
     <button id="start-btn">Start Beacon Scan</button>
     <h1>Note: For editors, this map is a test only. Not the actual map we'll be using :)</h1>
 
@@ -41,8 +41,7 @@
             crs: L.CRS.Simple
         }).setView([0, 0], 0);
 
-        const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
-        const imagePathPrefix = isMobile ? '/Internal storage/Page/Click IT (V0.0.01.6)/' : '';
+        const imagePathPrefix = ''; // All assets are in the same folder as this file
 
         const imageUrl = imagePathPrefix + 'floor_plan_enhanced.png';
         const imageWidth = 100;
@@ -78,6 +77,11 @@
         let deviceMarker = null;
 
         document.getElementById('start-btn').addEventListener('click', async () => {
+            if (!('bluetooth' in navigator) || !navigator.bluetooth.requestLEScan) {
+                alert("This browser does not support Bluetooth scanning.");
+                return;
+            }
+
             try {
                 const options = {
                     acceptAllAdvertisements: true
@@ -91,11 +95,9 @@
                     const deviceAddress = event.device.id || '';
                     const rssi = event.rssi;
 
-                    // Check for your specific beacon
                     if (deviceName.includes('Holy-IOT') && deviceAddress.includes('FB:01:4B:54:27:3E')) {
                         console.log(`Beacon found: ${deviceName} (${deviceAddress}) RSSI: ${rssi}`);
 
-                        // Map the RSSI to rough position manually (you can adjust these!)
                         let lat = 0;
                         let lng = 0;
 
@@ -122,9 +124,16 @@
                         }
                     }
                 });
+
+                // Stop scan after 10 seconds
+                setTimeout(() => {
+                    scan.stop();
+                    console.log("Scan stopped.");
+                }, 10000);
+
             } catch (error) {
                 console.error("BLE scan failed or not supported:", error);
-                alert("Bluetooth scan failed or not supported on this device/browser.");
+                alert("Bluetooth scan failed or is not supported on this device/browser.");
             }
         });
     </script>
