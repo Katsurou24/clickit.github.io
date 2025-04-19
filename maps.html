@@ -1,141 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClickIT Maps</title>
-
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Inter+Tight:wght@400;700&display=swap" rel="stylesheet">
-
-    <!-- Leaflet.js CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
-
-    <link rel="stylesheet" href="maps-style.css">
+  <meta charset="UTF-8">
+  <title>Indoor Map</title>
+  <link rel="stylesheet" href="maps-style.css">
 </head>
 <body>
-    <nav class="navbar">
-        <div class="navbar-left">
-            <img src="user-icon.png" alt="ClickIT Logo">
-            <a href="#" class="navbar-brand">ClickIT Website Mapping Technologies</a>
-        </div>
-        <div class="navbar-right">
-            <a href="home.html" class="nav-link">Home</a>
-            <a href="about.html" class="nav-link">About Us</a>
-            <a href="help.html" class="nav-link">Help</a>
-            <a href="maps.html" class="nav-link">Maps</a>
-        </div>
-    </nav>
 
-    <div id="map" style="height: 80vh;"></div>
-    <button id="start-btn">Start Beacon Scan</button>
-    <h1>Note: For editors, this map is a test only. Not the actual map we'll be using :)</h1>
+  <h1>Indoor Map Viewer</h1>
 
-    <!-- Leaflet.js -->
-    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+  <div id="map-container">
+    <!-- Your actual floor plan image -->
+    <img id="floor-map" src="assets/floor_plan_enhanced.png" alt="Map">
+    
+    <!-- A simple red dot to represent user's position (for testing) -->
+    <div id="user-dot"></div>
+  </div>
 
-    <script>
-        const map = L.map('map', {
-            minZoom: -5,
-            maxZoom: 5,
-            crs: L.CRS.Simple
-        }).setView([0, 0], 0);
+  <script>
+    // Simple animation that simulates the user moving
+    const userDot = document.getElementById("user-dot");
+    const positions = [
+      { top: "20%", left: "25%" },
+      { top: "40%", left: "50%" },
+      { top: "65%", left: "70%" }
+    ];
+    let index = 0;
 
-        const imagePathPrefix = ''; // All assets are in the same folder as this file
+    setInterval(() => {
+      const pos = positions[index];
+      userDot.style.top = pos.top;
+      userDot.style.left = pos.left;
+      index = (index + 1) % positions.length;
+    }, 2000);
+  </script>
 
-        const imageUrl = imagePathPrefix + 'floor_plan_enhanced.png';
-        const imageWidth = 100;
-        const imageHeight = imageWidth * (2048 / 1487);
-        const imageBounds = [[-imageHeight / 2, -imageWidth / 2], [imageHeight / 2, imageWidth / 2]];
-
-        L.imageOverlay(imageUrl, imageBounds).addTo(map);
-        map.fitBounds(imageBounds);
-
-        const pcIcon = L.icon({
-            iconUrl: imagePathPrefix + 'marker.webp',
-            iconSize: [64, 64]
-        });
-
-        const deskIcon = L.icon({
-            iconUrl: imagePathPrefix + 'marker.webp',
-            iconSize: [64, 64]
-        });
-
-        const beaconIcon = L.icon({
-            iconUrl: imagePathPrefix + 'beacon-icon.webp',
-            iconSize: [16, 16]
-        });
-
-        // Static markers
-        L.marker([-10.00, -0.75], { icon: beaconIcon }).addTo(map).bindPopup("Holy-IOT Bluetooth Beacon");
-        L.marker([-60.00, -32.25], { icon: pcIcon }).addTo(map).bindPopup("Refrigerator");
-        L.marker([-19.75, -36.50], { icon: deskIcon }).addTo(map).bindPopup("Goods Shelf");
-        L.marker([-10.00, -0.75], { icon: pcIcon }).addTo(map).bindPopup("Kaoru's Computer");
-        L.marker([9.00, 5.00], { icon: pcIcon }).addTo(map).bindPopup("Big Shelf");
-        L.marker([53.75, 38.25], { icon: pcIcon }).addTo(map).bindPopup("Marilyn's Computer");
-
-        let deviceMarker = null;
-
-        document.getElementById('start-btn').addEventListener('click', async () => {
-            if (!('bluetooth' in navigator) || !navigator.bluetooth.requestLEScan) {
-                alert("This browser does not support Bluetooth scanning.");
-                return;
-            }
-
-            try {
-                const options = {
-                    acceptAllAdvertisements: true
-                };
-                const scan = await navigator.bluetooth.requestLEScan(options);
-
-                console.log("Scanning for BLE devices...");
-
-                navigator.bluetooth.addEventListener('advertisementreceived', event => {
-                    const deviceName = event.device.name || '';
-                    const deviceAddress = event.device.id || '';
-                    const rssi = event.rssi;
-
-                    if (deviceName.includes('Holy-IOT') && deviceAddress.includes('FB:01:4B:54:27:3E')) {
-                        console.log(`Beacon found: ${deviceName} (${deviceAddress}) RSSI: ${rssi}`);
-
-                        let lat = 0;
-                        let lng = 0;
-
-                        if (rssi > -50) {
-                            lat = 10;
-                            lng = 10;
-                        } else if (rssi > -60) {
-                            lat = 5;
-                            lng = 5;
-                        } else if (rssi > -70) {
-                            lat = 0;
-                            lng = 0;
-                        } else {
-                            lat = -5;
-                            lng = -5;
-                        }
-
-                        if (deviceMarker) {
-                            deviceMarker.setLatLng([lat, lng]);
-                        } else {
-                            deviceMarker = L.marker([lat, lng], { icon: pcIcon }).addTo(map)
-                                .bindPopup("Your Current Position")
-                                .openPopup();
-                        }
-                    }
-                });
-
-                // Stop scan after 10 seconds
-                setTimeout(() => {
-                    scan.stop();
-                    console.log("Scan stopped.");
-                }, 10000);
-
-            } catch (error) {
-                console.error("BLE scan failed or not supported:", error);
-                alert("Bluetooth scan failed or is not supported on this device/browser.");
-            }
-        });
-    </script>
 </body>
 </html>
