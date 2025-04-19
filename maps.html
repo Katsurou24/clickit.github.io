@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClickIT Maps</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Inter+Tight:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- Leaflet.js CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .navbar {
+            background-color: #3087d7;
+            padding: 15px 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100vw;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 70px;
+            z-index: 1000;
+        }
+
+        .navbar-left {
+            display: flex;
+            align-items: center;
+        }
+
+        .navbar img {
+            max-height: 40px;
+            width: auto;
+            margin-right: 12px;
+            object-fit: contain;
+        }
+
+        .navbar-brand {
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            font-size: 22px;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        .navbar-right {
+            display: flex;
+        }
+
+        .nav-link {
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            font-size: 18px;
+            text-decoration: none;
+            padding: 12px 18px;
+            transition: background-color 0.3s;
+        }
+
+        .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+        }
+
+        body {
+            padding-top: 80px;
+            background-color: #e9e9e9;
+            text-align: center;
+        }
+
+        #map {
+            height: 80vh;
+            width: 100%;
+            margin-bottom: 0;
+        }
+
+        .leaflet-control-attribution {
+            max-height: 15px !important;
+            max-width: 150px !important;
+            overflow: hidden !important;
+            white-space: nowrap !important;
+            font-size: 10px !important;
+            padding: 2px 5px !important;
+            opacity: 0.7;
+        }
+
+        #start-btn {
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 16px;
+            background-color: #3087d7;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        #start-btn:hover {
+            background-color: #276db0;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-left">
+            <img src="user-icon.png" alt="ClickIT Logo">
+            <a href="#" class="navbar-brand">ClickIT Website Mapping Technologies</a>
+        </div>
+        <div class="navbar-right">
+            <a href="home.html" class="nav-link">Home</a>
+            <a href="about.html" class="nav-link">About Us</a>
+            <a href="help.html" class="nav-link">Help</a>
+            <a href="maps.html" class="nav-link">Maps</a>
+        </div>
+    </nav>
+
+    <div id="map"></div>
+    <button id="start-btn">Start Beacon Scan</button>
+    <h1>Note: For editors, this map is a test only. Not the actual map we'll be using :)</h1>
+
+    <!-- Leaflet.js -->
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+
+    <script>
+        const map = L.map('map', {
+            minZoom: -5,
+            maxZoom: 5,
+            crs: L.CRS.Simple
+        }).setView([0, 0], 0);
+
+        const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+        const imagePathPrefix = isMobile ? '/Internal storage/Page/Click IT (V0.0.01.6)/' : '';
+
+        const imageUrl = imagePathPrefix + 'floor_plan_enhanced.png';
+        const imageWidth = 100;
+        const imageHeight = imageWidth * (2048 / 1487);
+        const imageBounds = [[-imageHeight / 2, -imageWidth / 2], [imageHeight / 2, imageWidth / 2]];
+
+        L.imageOverlay(imageUrl, imageBounds).addTo(map);
+        map.fitBounds(imageBounds);
+
+        const pcIcon = L.icon({
+            iconUrl: imagePathPrefix + 'marker.webp',
+            iconSize: [64, 64]
+        });
+
+        const deskIcon = L.icon({
+            iconUrl: imagePathPrefix + 'marker.webp',
+            iconSize: [64, 64]
+        });
+
+        const beaconIcon = L.icon({
+            iconUrl: imagePathPrefix + 'beacon-icon.webp',
+            iconSize: [16, 16]
+        });
+
+        // Static markers
+        L.marker([-10.00, -0.75], { icon: beaconIcon }).addTo(map).bindPopup("Holy-IOT Bluetooth Beacon");
+        L.marker([-60.00, -32.25], { icon: pcIcon }).addTo(map).bindPopup("Refrigerator");
+        L.marker([-19.75, -36.50], { icon: deskIcon }).addTo(map).bindPopup("Goods Shelf");
+        L.marker([-10.00, -0.75], { icon: pcIcon }).addTo(map).bindPopup("Kaoru's Computer");
+        L.marker([9.00, 5.00], { icon: pcIcon }).addTo(map).bindPopup("Big Shelf");
+        L.marker([53.75, 38.25], { icon: pcIcon }).addTo(map).bindPopup("Marilyn's Computer");
+
+        let deviceMarker = null;
+
+        document.getElementById('start-btn').addEventListener('click', async () => {
+            try {
+                const options = {
+                    acceptAllAdvertisements: true
+                };
+                const scan = await navigator.bluetooth.requestLEScan(options);
+
+                console.log("Scanning for BLE devices...");
+
+                navigator.bluetooth.addEventListener('advertisementreceived', event => {
+                    const deviceName = event.device.name || '';
+                    const deviceAddress = event.device.id || '';
+                    const rssi = event.rssi;
+
+                    // Check for your specific beacon
+                    if (deviceName.includes('Holy-IOT') && deviceAddress.includes('FB:01:4B:54:27:3E')) {
+                        console.log(`Beacon found: ${deviceName} (${deviceAddress}) RSSI: ${rssi}`);
+
+                        // Map the RSSI to rough position manually (you can adjust these!)
+                        let lat = 0;
+                        let lng = 0;
+
+                        if (rssi > -50) {
+                            lat = 10;
+                            lng = 10;
+                        } else if (rssi > -60) {
+                            lat = 5;
+                            lng = 5;
+                        } else if (rssi > -70) {
+                            lat = 0;
+                            lng = 0;
+                        } else {
+                            lat = -5;
+                            lng = -5;
+                        }
+
+                        if (deviceMarker) {
+                            deviceMarker.setLatLng([lat, lng]);
+                        } else {
+                            deviceMarker = L.marker([lat, lng], { icon: pcIcon }).addTo(map)
+                                .bindPopup("Your Current Position")
+                                .openPopup();
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error("BLE scan failed or not supported:", error);
+                alert("Bluetooth scan failed or not supported on this device/browser.");
+            }
+        });
+    </script>
+</body>
+</html>
