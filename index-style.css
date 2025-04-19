@@ -9,7 +9,7 @@
             background-color: #3087d7;
             padding: 15px 25px;
             display: flex;
-            align-items: left;
+            align-items: center;
             justify-content: space-between;
             width: 100vw;
             position: fixed;
@@ -65,7 +65,7 @@
 
         .center-text {
             font-family: 'Inter Tight', sans-serif;
-            font-size: 72px;
+            font-size: 144px;
             font-weight: 700;
             color: #333;
             margin-top: 20px;
@@ -73,30 +73,25 @@
 
 @media (max-width: 768px) {
     .navbar {
-        padding: 10px 15px; /* Reduce padding, but keep flex-direction row */
+        flex-direction: column;
+        align-items: flex-start;
         height: auto;
-        flex-wrap: wrap; /* Allow wrapping if really tight */
-    }
-
-    .navbar-left {
-        margin-bottom: 0;
+        padding: 10px;
     }
 
     .navbar-right {
-        flex-direction: row; /* KEEP horizontal layout */
-        flex-wrap: wrap;     /* Wrap if space is too tight */
-        justify-content: flex-end;
-        width: auto;
+        flex-direction: column;
+        width: 100%;
     }
 
     .nav-link {
-        padding: 8px 12px;
-        font-size: 16px;
-        white-space: nowrap; /* Prevent text wrapping */
+        padding: 10px 0;
+        width: 100%;
+        text-align: left;
     }
 
     .center-text {
-        font-size: 48px;
+        font-size: 48px; /* Smaller size for mobile */
         padding: 0 10px;
     }
 }
