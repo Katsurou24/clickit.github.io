@@ -4,9 +4,26 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Indoor Map</title>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Inter+Tight:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="maps-style.css" />
+  <link rel="stylesheet" href="index-style.css"> <!-- Include the same CSS file for consistency -->
 </head>
 <body>
+
+  <!-- Navbar (copied from index.html) -->
+  <nav class="navbar">
+    <div class="navbar-left">
+      <img src="assets/logo.png" alt="ClickIT Logo">
+      <a href="#" class="navbar-brand">ClickIT Website Mapping Technologies</a>
+    </div>
+    <div class="navbar-right">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="about.html" class="nav-link">About Us</a>
+      <a href="help.html" class="nav-link">Help</a>
+      <a href="maps.html" class="nav-link">Maps</a>
+    </div>
+  </nav>
 
   <h1>Indoor Map Test</h1>
 
@@ -17,60 +34,55 @@
     <img id="floor-map" src="assets/floor_plan_enhanced.png" alt="Floor Map" />
   </div>
 
+  <!-- JavaScript for BLE functionality -->
   <script>
-    const beacon1 = "fb:01:4b:54:27:3e"; // Beacon 1
-    const beacon2 = "cf:15:06:d2:b2:21"; // Beacon 2
+    const beacon1 = "fb:01:4b:54:27:3e".toUpperCase();
+    const beacon2 = "cf:15:06:d2:b2:21".toUpperCase();
+
     const mapContainer = document.getElementById("map-container");
     const status = document.getElementById("status");
 
     let currentNearest = null;
     let rssiMap = {};
 
-    document.getElementById("start-scan").addEventListener("click", async () => {
-      if (!navigator.bluetooth || !navigator.bluetooth.requestLEScan) {
-        alert("Web Bluetooth API not supported on this device/browser.");
-        return;
-      }
+    document.addEventListener('deviceready', () => {
+      document.getElementById("start-scan").addEventListener("click", startBLEScan);
+    });
 
-      status.textContent = "Requesting scan permission...";
-      
-      try {
-        await navigator.bluetooth.requestLEScan({ acceptAllAdvertisements: true });
+    function startBLEScan() {
+      status.textContent = "Scanning for beacons...";
 
-        status.textContent = "Scanning... bring your beacons close.";
+      // Start scanning for devices using Cordova BLE plugin
+      ble.scan([], 5, function(device) {
+        const mac = device.id.toUpperCase();
+        const rssi = device.rssi;
 
-        navigator.bluetooth.addEventListener("advertisementreceived", event => {
-          const mac = event.device.id.toLowerCase();
-          const rssi = event.rssi;
+        if (mac === beacon1 || mac === beacon2) {
+          rssiMap[mac] = rssi;
 
-          if (mac === beacon1 || mac === beacon2) {
-            rssiMap[mac] = rssi;
+          let nearest = null;
+          if (rssiMap[beacon1] != null && rssiMap[beacon2] != null) {
+            nearest = rssiMap[beacon1] > rssiMap[beacon2] ? beacon1 : beacon2;
+          } else {
+            nearest = rssiMap[beacon1] != null ? beacon1 : beacon2;
+          }
 
-            let nearest = null;
-            if (rssiMap[beacon1] != null && rssiMap[beacon2] != null) {
-              nearest = rssiMap[beacon1] > rssiMap[beacon2] ? beacon1 : beacon2;
-            } else {
-              nearest = rssiMap[beacon1] != null ? beacon1 : beacon2;
-            }
+          if (nearest !== currentNearest) {
+            currentNearest = nearest;
+            status.textContent = `Nearest: ${nearest} (RSSI ${rssiMap[nearest]})`;
 
-            if (nearest !== currentNearest) {
-              currentNearest = nearest;
-              status.textContent = `Nearest: ${nearest.toUpperCase()} (RSSI ${rssiMap[nearest]})`;
-
-              if (nearest === beacon1) {
-                mapContainer.style.display = "block";
-              } else if (nearest === beacon2) {
-                mapContainer.style.display = "none";
-              }
+            if (nearest === beacon1) {
+              mapContainer.style.display = "block";
+            } else if (nearest === beacon2) {
+              mapContainer.style.display = "none";
             }
           }
-        });
-
-      } catch (error) {
-        console.error("Scan error:", error);
-        status.textContent = "Scan failed: " + error.message;
-      }
-    });
+        }
+      }, function(error) {
+        status.textContent = "Scan failed: " + error;
+        console.error("BLE scan error:", error);
+      });
+    }
   </script>
 
 </body>
